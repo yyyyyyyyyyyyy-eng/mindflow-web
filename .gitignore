@@ -1,0 +1,15 @@
+# Node
+node_modules/
+dist/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# PWA 生成物（由构建产出）
+sw.js
+workbox-*.js
