@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- MindFlow 图标：中心主题 + 发散分支的思维导图抽象 -->
+  <rect width="512" height="512" rx="96" fill="#4f7cf7"/>
+  <rect x="80" y="150" width="70" height="34" rx="10" fill="#a8c4f8"/>
+  <rect x="80" y="328" width="70" height="34" rx="10" fill="#a8c4f8"/>
+  <rect x="362" y="150" width="70" height="34" rx="10" fill="#a8c4f8"/>
+  <rect x="362" y="328" width="70" height="34" rx="10" fill="#a8c4f8"/>
+  <rect x="80" y="239" width="70" height="34" rx="10" fill="#a8c4f8"/>
+  <rect x="362" y="239" width="70" height="34" rx="10" fill="#a8c4f8"/>
+  <path d="M150 167 C 190 167 196 239 196 239" stroke="#cddcfb" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M150 345 C 190 345 196 273 196 273" stroke="#cddcfb" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M362 167 C 322 167 316 239 316 239" stroke="#cddcfb" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M362 345 C 322 345 316 273 316 273" stroke="#cddcfb" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M150 256 L 196 256" stroke="#cddcfb" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M316 256 L 362 256" stroke="#cddcfb" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <rect x="196" y="212" width="120" height="88" rx="22" fill="#ffffff"/>
+</svg>

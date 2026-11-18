@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-18 20:31:48
-- **最新版本**：v0.12.0
+- **最近更新**：2026-11-18 20:43:17
+- **最新版本**：v0.13.0
 ---
 
 ## 需求跟踪
@@ -19,7 +19,7 @@
 | REQ-006 | 编辑页：多文档标签栏 + 画布/大纲 stub 组件（§7 同签名真实改文档） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-007 | .mflow 导入导出（JSON 校验 + Blob 下载 + FSAA 写回） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-008 | 移动端 <768px 适配（大纲主入口/底部抽屉/44px 触控/pinch 手势/安全区） | 2026-11-18 20:15:12 | 已完成 |  |
-| REQ-009 | PWA：manifest + vite-plugin-pwa 离线缓存 | 2026-11-18 20:15:13 | 待实现 |  |
+| REQ-009 | PWA：manifest + vite-plugin-pwa 离线缓存 | 2026-11-18 20:15:13 | 已完成 |  |
 | REQ-010 | GitHub Pages 部署工作流 + vite base | 2026-11-18 20:15:13 | 待实现 |  |
 
 <!--
@@ -130,6 +130,12 @@
 - **需求关联**：REQ-008
 - **变更摘要**：抽屉集成：小屏检查器/主题库折叠为底部抽屉（工具栏「样式/主题」按钮）、文档列表 DocListSheet 抽屉（TabBar actions 插槽）；<768px 媒体查询（列表项纵向堆叠、侧栏隐藏、按钮 44px）+ iOS 安全区 padding
 - **自查结论**：通过（七维自查；tsc -b 0 错误、vite build 通过；抽屉/布局待手机模拟实测）
+
+### CHG-013 ｜ 2026-11-18 20:43:17 ｜ 新增
+- **文件**：`vite.config.ts`、`public/icons/icon.svg`、`public/icons/pwa-192.png`、`public/icons/pwa-512.png`
+- **需求关联**：REQ-009
+- **变更摘要**：PWA：vite-plugin-pwa（registerType autoUpdate + Workbox 预缓存全部静态产物，navigateFallback SPA）；manifest 名称 MindFlow + 192/512/maskable 图标（SVG 经 qlmanage 生成 PNG）；构建产物 manifest.webmanifest/sw.js/precache 10 entries 294KB 实测生成
+- **自查结论**：通过（七维自查；tsc -b 0 错误；build 输出实测 manifest+sw+图标齐全，manifest 生效证据待 preview 冒烟抓取）
 
 ## Bug 记录
 
