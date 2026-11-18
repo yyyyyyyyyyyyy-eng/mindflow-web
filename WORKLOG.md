@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-18 20:19:17
-- **最新版本**：v0.4.0
+- **最近更新**：2026-11-18 20:20:41
+- **最新版本**：v0.5.0
 ---
 
 ## 需求跟踪
@@ -15,7 +15,7 @@
 | REQ-002 | src/types.ts 逐字复制契约 §2/§5/§6 类型 | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-003 | IndexedDB StorageAdapter（idb，db=mindflow store=docs keyPath=id） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-004 | DocumentService 临时实现（Immer undo 栈 + 2s 防抖 + subscribe + flushSave） | 2026-11-18 20:15:12 | 已完成 |  |
-| REQ-005 | 文档列表页：新建/重命名/删除/DocMeta 展示 | 2026-11-18 20:15:12 | 待实现 |  |
+| REQ-005 | 文档列表页：新建/重命名/删除/DocMeta 展示 | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-006 | 编辑页：多文档标签栏 + 画布/大纲 stub 组件（§7 同签名真实改文档） | 2026-11-18 20:15:12 | 待实现 |  |
 | REQ-007 | .mflow 导入导出（JSON 校验 + Blob 下载 + FSAA 写回） | 2026-11-18 20:15:12 | 待实现 |  |
 | REQ-008 | 移动端 <768px 适配（大纲主入口/底部抽屉/44px 触控/pinch 手势/安全区） | 2026-11-18 20:15:12 | 待实现 |  |
@@ -83,6 +83,12 @@
 - **变更摘要**：契约 §6 DocumentService 临时实现（文件头 TODO 标记将来由 mindflow-core 替换）：update 走 Immer 不可变更新入无限 undo 栈、2s 防抖自动保存、subscribe 退订函数、flushSave 立即落盘（App 层挂 visibilitychange/beforeunload）
 - **自查结论**：通过（七维自查；输出后校验 tsc -b 0 错误；undo/redo/防抖行为待 dev 冒烟验证）
 
+### CHG-005 ｜ 2026-11-18 20:20:41 ｜ 新增
+- **文件**：`src/lib/docFactory.ts`、`src/components/DocumentList.tsx`、`src/styles/global.css`、`src/App.tsx`、`src/main.tsx`、`src/vite-env.d.ts`
+- **需求关联**：REQ-005
+- **变更摘要**：文档列表页：新建（契约 §2 空文档规范）/重命名（title 与 root.text 同步）/删除（confirm 防误触）/DocMeta 展示；全局样式含 44px 触控基线；App 接入存储生命周期；补 vite-env.d.ts 修复 css 副作用导入类型报错
+- **自查结论**：通过（七维自查；输出后校验 tsc -b 0 错误、vite build 通过；交互行为待 dev 冒烟验证）
+
 ## Bug 记录
 
 <!-- 每个 Bug 由脚本（add-bug）在此节末尾追加一个条目，无论是否已修复都要记录。格式示例：
@@ -94,3 +100,11 @@
   - **关联变更**：CHG-XXX
   - **状态**：已修复
 -->
+
+### BUG-001 ｜ 2026-11-18 20:20:41
+- **现象**：tsc -b 报 TS2882：main.tsx 副作用导入 global.css 无类型声明
+- **原因**：TypeScript 严格校验副作用导入（noUncheckedSideEffectImports 语义），css 模块缺少 vite/client 类型声明
+- **修复方案**：新增 src/vite-env.d.ts 引用 vite/client 类型（Vite 官方模板标准做法）
+- **关联变更**：CHG-005
+- **状态**：已修复
+
