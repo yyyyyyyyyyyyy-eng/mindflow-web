@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-18 20:18:39
-- **最新版本**：v0.3.0
+- **最近更新**：2026-11-18 20:19:17
+- **最新版本**：v0.4.0
 ---
 
 ## 需求跟踪
@@ -14,7 +14,7 @@
 | REQ-001 | TS 迁移基建：JSX 脚手架转 TSX strict + React 19 升级 + 安装 idb/immer/nanoid | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-002 | src/types.ts 逐字复制契约 §2/§5/§6 类型 | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-003 | IndexedDB StorageAdapter（idb，db=mindflow store=docs keyPath=id） | 2026-11-18 20:15:12 | 已完成 |  |
-| REQ-004 | DocumentService 临时实现（Immer undo 栈 + 2s 防抖 + subscribe + flushSave） | 2026-11-18 20:15:12 | 待实现 |  |
+| REQ-004 | DocumentService 临时实现（Immer undo 栈 + 2s 防抖 + subscribe + flushSave） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-005 | 文档列表页：新建/重命名/删除/DocMeta 展示 | 2026-11-18 20:15:12 | 待实现 |  |
 | REQ-006 | 编辑页：多文档标签栏 + 画布/大纲 stub 组件（§7 同签名真实改文档） | 2026-11-18 20:15:12 | 待实现 |  |
 | REQ-007 | .mflow 导入导出（JSON 校验 + Blob 下载 + FSAA 写回） | 2026-11-18 20:15:12 | 待实现 |  |
@@ -76,6 +76,12 @@
 - **需求关联**：REQ-003
 - **变更摘要**：契约 §6 StorageAdapter 的 IndexedDB 实现（idb 库，db=mindflow/store=docs/keyPath=id），list/load/save/delete 全签名；title=root.text 保存时兜底同步；Safari 隐私模式降级内存实现 + isMemoryFallback 提示
 - **自查结论**：通过（七维自查；输出后校验 tsc -b 0 错误、vite build 通过；持久化行为待 dev 冒烟验证）
+
+### CHG-004 ｜ 2026-11-18 20:19:17 ｜ 新增
+- **文件**：`src/services/documentService.ts`
+- **需求关联**：REQ-004
+- **变更摘要**：契约 §6 DocumentService 临时实现（文件头 TODO 标记将来由 mindflow-core 替换）：update 走 Immer 不可变更新入无限 undo 栈、2s 防抖自动保存、subscribe 退订函数、flushSave 立即落盘（App 层挂 visibilitychange/beforeunload）
+- **自查结论**：通过（七维自查；输出后校验 tsc -b 0 错误；undo/redo/防抖行为待 dev 冒烟验证）
 
 ## Bug 记录
 
