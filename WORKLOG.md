@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-18 20:28:07
-- **最新版本**：v0.9.0
+- **最近更新**：2026-11-18 20:31:48
+- **最新版本**：v0.12.0
 ---
 
 ## 需求跟踪
@@ -18,7 +18,7 @@
 | REQ-005 | 文档列表页：新建/重命名/删除/DocMeta 展示 | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-006 | 编辑页：多文档标签栏 + 画布/大纲 stub 组件（§7 同签名真实改文档） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-007 | .mflow 导入导出（JSON 校验 + Blob 下载 + FSAA 写回） | 2026-11-18 20:15:12 | 已完成 |  |
-| REQ-008 | 移动端 <768px 适配（大纲主入口/底部抽屉/44px 触控/pinch 手势/安全区） | 2026-11-18 20:15:12 | 待实现 |  |
+| REQ-008 | 移动端 <768px 适配（大纲主入口/底部抽屉/44px 触控/pinch 手势/安全区） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-009 | PWA：manifest + vite-plugin-pwa 离线缓存 | 2026-11-18 20:15:13 | 待实现 |  |
 | REQ-010 | GitHub Pages 部署工作流 + vite base | 2026-11-18 20:15:13 | 待实现 |  |
 
@@ -112,6 +112,24 @@
 - **需求关联**：REQ-007
 - **变更摘要**：.mflow 导入导出：FileReader 读取 + 严格校验（formatVersion 必须为 1、结构白名单、递归形状校验）；导出优先 File System Access API 写回、降级 Blob 下载（文件名 MindFlow-标题.mflow，导出前同步 title 镜像）；导入 id 冲突生成新副本；顺带修复标签栏标题不同步 root.text 的隐患
 - **自查结论**：通过（七维自查；tsc -b 0 错误、vite build 通过；导入导出全链路待 dev 冒烟验证）
+
+### CHG-010 ｜ 2026-11-18 20:31:48 ｜ 新增
+- **文件**：`index.html`、`src/hooks/useIsMobile.ts`、`src/components/BottomSheet.tsx`、`src/styles/global.css`
+- **需求关联**：REQ-008
+- **变更摘要**：移动端基座：viewport-fit=cover + theme-color、useIsMobile（matchMedia 实时）、通用 BottomSheet 组件（遮罩/Esc/安全区）
+- **自查结论**：通过（七维自查；tsc -b 0 错误、vite build 通过）
+
+### CHG-011 ｜ 2026-11-18 20:31:48 ｜ 新增
+- **文件**：`src/components/stubs/canvasGestures.ts`、`src/components/stubs/MindMapCanvasStub.tsx`
+- **需求关联**：REQ-008
+- **变更摘要**：画布 stub 触摸手势（契约 §7.1）：pinch 缩放（围绕中点、clamp 0.3-3）+ 双指平移（原生事件 passive:false 接管、transform 命令式直写避免每帧 setState）+ 长按 500ms 唤出节点菜单（编辑/加子/删）+ 长按后 click 抑制 + 复位视图按钮
+- **自查结论**：通过（双指中点缩放公式按 transform-origin 0 0 推导；React 合成 touch 事件 passive 不能 preventDefault，改原生绑定；tsc -b 0 错误；待手机模拟实测）
+
+### CHG-012 ｜ 2026-11-18 20:31:48 ｜ 新增
+- **文件**：`src/components/DocListSheet.tsx`、`src/components/ActiveDocPane.tsx`、`src/components/EditorPage.tsx`、`src/components/TabBar.tsx`、`src/App.tsx`、`src/styles/global.css`
+- **需求关联**：REQ-008
+- **变更摘要**：抽屉集成：小屏检查器/主题库折叠为底部抽屉（工具栏「样式/主题」按钮）、文档列表 DocListSheet 抽屉（TabBar actions 插槽）；<768px 媒体查询（列表项纵向堆叠、侧栏隐藏、按钮 44px）+ iOS 安全区 padding
+- **自查结论**：通过（七维自查；tsc -b 0 错误、vite build 通过；抽屉/布局待手机模拟实测）
 
 ## Bug 记录
 

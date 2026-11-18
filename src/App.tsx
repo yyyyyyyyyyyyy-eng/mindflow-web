@@ -73,6 +73,7 @@ export default function App() {
           onCloseTab={closeTab}
           onBackToList={() => setView('list')}
           onDocMissing={handleDocMissing}
+          onOpenDoc={openDoc}
         />
       ) : (
         <DocumentList adapter={adapter} onOpenDoc={openDoc} />

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { DocumentService, StorageAdapter } from '../types'
 import { createDocumentService } from '../services/documentService'
+import { useIsMobile } from '../hooks/useIsMobile'
 import TabBar, { type TabInfo } from './TabBar'
 import ActiveDocPane from './ActiveDocPane'
+import DocListSheet from './DocListSheet'
 
 /**
  * 编辑页（交付清单第 5 项）：多文档标签栏 + 画布/大纲编辑区。
@@ -11,7 +13,8 @@ import ActiveDocPane from './ActiveDocPane'
  * - 每个打开的文档一个 DocumentService 实例（undo 栈随标签保留，切换不丢）；
  * - 切走标签 / 页面隐藏（visibilitychange）/ 卸载（pagehide、unmount）时
  *   调用 flushSave 立即落盘（契约 §6 语义）；
- * - 关闭标签时先落盘再销毁该文档的编辑会话。
+ * - 关闭标签时先落盘再销毁该文档的编辑会话；
+ * - 小屏（<768px）时文档列表折叠为底部抽屉（契约 §7.1）。
  */
 
 interface EditorPageProps {
@@ -27,6 +30,8 @@ interface EditorPageProps {
   onBackToList: () => void
   /** 文档在存储中已不存在（如被其他端删除）时回调 */
   onDocMissing: (id: string) => void
+  /** 从抽屉打开文档（已打开则切换，未打开则新开标签） */
+  onOpenDoc: (id: string) => void
 }
 
 export default function EditorPage({
@@ -37,11 +42,15 @@ export default function EditorPage({
   onCloseTab,
   onBackToList,
   onDocMissing,
+  onOpenDoc,
 }: EditorPageProps) {
   // 每个文档的编辑会话（service）与标题镜像
   const servicesRef = useRef(new Map<string, DocumentService>())
   const titleByIdRef = useRef(new Map<string, string>())
   const [activeService, setActiveService] = useState<DocumentService | null>(null)
+  // 契约 §7.1：小屏文档列表折叠为底部抽屉
+  const isMobile = useIsMobile()
+  const [docSheetOpen, setDocSheetOpen] = useState(false)
 
   // 标题变化时同步到标签栏数据源（ActiveDocPane 上报）
   const syncTitle = (docId: string, title: string): void => {
@@ -126,6 +135,25 @@ export default function EditorPage({
         onSelect={handleSelectTab}
         onClose={handleCloseTab}
         onBack={onBackToList}
+        actions={
+          isMobile ? (
+            <button
+              type="button"
+              className="btn btn-ghost tab-back"
+              aria-label="打开文档列表抽屉"
+              onClick={() => setDocSheetOpen(true)}
+            >
+              文档
+            </button>
+          ) : undefined
+        }
+      />
+      <DocListSheet
+        adapter={adapter}
+        open={docSheetOpen}
+        activeId={activeId}
+        onClose={() => setDocSheetOpen(false)}
+        onOpenDoc={onOpenDoc}
       />
       {activeService === null ? (
         <div className="app-loading">载入中…</div>

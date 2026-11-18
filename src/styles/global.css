@@ -617,3 +617,220 @@ body {
 .hidden-file-input {
   display: none;
 }
+
+/* ══════════ 底部抽屉（契约 §7.1）══════════ */
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 18, 22, 0.4);
+  border: 0;
+  padding: 0;
+  z-index: 40;
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 72vh;
+  background: var(--panel);
+  border-radius: 16px 16px 0 0;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  animation: sheet-up 0.22s ease;
+  /* 契约 §7.1：iOS 安全区 */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.sheet-grip {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 8px auto 0;
+  flex-shrink: 0;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 12px;
+  flex-shrink: 0;
+}
+
+.sheet-title {
+  font-size: 16px;
+}
+
+.sheet-body {
+  overflow-y: auto;
+  padding: 0 16px 16px;
+}
+
+.sheet-docs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-doc {
+  min-height: var(--touch);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-doc-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ══════════ 画布手势容器（契约 §7.1 pinch/pan/长按）══════════ */
+.mm-canvas-toolbar {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.mm-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  /* 双指手势由组件接管（passive:false + preventDefault），单指留给浏览器滚动 */
+  touch-action: pan-x pan-y;
+}
+
+.mm-content {
+  transform-origin: 0 0;
+  padding: 24px;
+  min-width: fit-content;
+  min-height: fit-content;
+}
+
+.mm-reset {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 5;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* 长按节点操作菜单 */
+.lp-menu-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+.lp-menu {
+  position: fixed;
+  z-index: 61;
+  width: 168px;
+  background: var(--panel);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(31, 35, 41, 0.18);
+  overflow: hidden;
+}
+
+.lp-item {
+  display: block;
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lp-item:active {
+  background: #eef1f5;
+}
+
+.lp-item-danger {
+  color: var(--danger);
+}
+
+/* ══════════ <768px 移动端适配（契约 §7.1）══════════ */
+@media (max-width: 767px) {
+  /* 顶部标签栏：遵守 iOS 安全区 */
+  .tabbar {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .tab-btn {
+    max-width: 120px;
+  }
+
+  /* 文档列表项：标题与操作上下排列，操作按钮全宽、触控 ≥44px */
+  .doc-item {
+    flex-direction: column;
+  }
+
+  .doc-actions {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    width: 100%;
+  }
+
+  .doc-actions .btn {
+    flex: 1;
+  }
+
+  .doc-list-page {
+    padding: 16px 12px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+  }
+
+  /* 编辑区：小屏不渲染桌面侧栏（检查器/主题库走底部抽屉） */
+  .editor-side {
+    display: none;
+  }
+
+  .editor-toolbar {
+    padding-bottom: 8px;
+  }
+
+  .seg-btn {
+    min-height: var(--touch);
+  }
+
+  .editor-toolbar .btn {
+    min-height: var(--touch);
+  }
+
+  /* 大纲行操作按钮稍紧凑，但保持触控目标高度 */
+  .ol-ops .btn {
+    padding: 4px 10px;
+    min-height: var(--touch);
+    min-width: var(--touch);
+  }
+}

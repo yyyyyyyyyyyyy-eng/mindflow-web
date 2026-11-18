@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { DocNode, DocumentService, MindDoc } from '../types'
 import { useDocument } from '../hooks/useDocument'
+import { useIsMobile } from '../hooks/useIsMobile'
 import { findNode } from '../lib/treeUtils'
 import { saveMflowFile } from '../lib/mflowFile'
 import MindMapCanvasStub from './stubs/MindMapCanvasStub'
@@ -8,6 +9,7 @@ import OutlineViewStub from './stubs/OutlineViewStub'
 import InspectorStub from './stubs/InspectorStub'
 import ThemeGalleryStub from './stubs/ThemeGalleryStub'
 import { BUILTIN_THEMES } from './stubs/builtinThemes'
+import BottomSheet from './BottomSheet'
 
 /**
  * 当前文档编辑区：工具栏 + 画布/大纲切换 + 检查器/主题库侧栏。
@@ -25,6 +27,10 @@ type ViewMode = 'canvas' | 'outline'
 
 export default function ActiveDocPane({ service, onTitleSync }: ActiveDocPaneProps) {
   const doc = useDocument(service)
+  // 契约 §7.1：小屏时检查器/主题库折叠为底部抽屉，大纲为默认编辑入口
+  const isMobile = useIsMobile()
+  // 小屏抽屉：当前打开的面板
+  const [sheet, setSheet] = useState<'inspector' | 'themes' | null>(null)
 
   // 视图模式：小屏默认大纲（契约 §7.1：大纲视图为小屏主编辑入口）
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
@@ -136,9 +142,20 @@ export default function ActiveDocPane({ service, onTitleSync }: ActiveDocPanePro
         <button type="button" className="btn" onClick={() => void handleExport()}>
           导出 .mflow
         </button>
-        <button type="button" className="btn" onClick={() => setShowPanel((v) => !v)}>
-          {showPanel ? '隐藏面板' : '样式面板'}
-        </button>
+        {isMobile ? (
+          <>
+            <button type="button" className="btn" aria-label="节点样式" onClick={() => setSheet('inspector')}>
+              样式
+            </button>
+            <button type="button" className="btn" aria-label="主题库" onClick={() => setSheet('themes')}>
+              主题
+            </button>
+          </>
+        ) : (
+          <button type="button" className="btn" onClick={() => setShowPanel((v) => !v)}>
+            {showPanel ? '隐藏面板' : '样式面板'}
+          </button>
+        )}
         {/* 选中节点信息（stub 阶段固定为根节点） */}
         <span className="panel-hint">选中：{selectedNode.text === '' ? '（空）' : selectedNode.text}</span>
       </div>
@@ -151,7 +168,7 @@ export default function ActiveDocPane({ service, onTitleSync }: ActiveDocPanePro
             <OutlineViewStub doc={doc} onDocChange={handleDocChange} />
           )}
         </div>
-        {showPanel && (
+        {!isMobile && showPanel && (
           <aside className="editor-side">
             <InspectorStub node={selectedNode} onNodeChange={handleNodeChange} />
             <ThemeGalleryStub
@@ -162,6 +179,14 @@ export default function ActiveDocPane({ service, onTitleSync }: ActiveDocPanePro
           </aside>
         )}
       </div>
+
+      {/* 契约 §7.1：小屏检查器/主题库折叠为底部抽屉 */}
+      <BottomSheet open={sheet === 'inspector'} title="节点样式" onClose={() => setSheet(null)}>
+        <InspectorStub node={selectedNode} onNodeChange={handleNodeChange} />
+      </BottomSheet>
+      <BottomSheet open={sheet === 'themes'} title="主题库" onClose={() => setSheet(null)}>
+        <ThemeGalleryStub themes={BUILTIN_THEMES} current={doc.theme} onSelect={handleSelectTheme} />
+      </BottomSheet>
     </div>
   )
 }
