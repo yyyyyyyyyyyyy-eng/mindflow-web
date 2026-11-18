@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-18 20:43:17
-- **最新版本**：v0.13.0
+- **最近更新**：2026-11-18 20:44:01
+- **最新版本**：v0.14.0
 ---
 
 ## 需求跟踪
@@ -20,7 +20,7 @@
 | REQ-007 | .mflow 导入导出（JSON 校验 + Blob 下载 + FSAA 写回） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-008 | 移动端 <768px 适配（大纲主入口/底部抽屉/44px 触控/pinch 手势/安全区） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-009 | PWA：manifest + vite-plugin-pwa 离线缓存 | 2026-11-18 20:15:13 | 已完成 |  |
-| REQ-010 | GitHub Pages 部署工作流 + vite base | 2026-11-18 20:15:13 | 待实现 |  |
+| REQ-010 | GitHub Pages 部署工作流 + vite base | 2026-11-18 20:15:13 | 已完成 |  |
 
 <!--
   状态取值：待实现 / 进行中 / 已完成 / 已取消
@@ -136,6 +136,12 @@
 - **需求关联**：REQ-009
 - **变更摘要**：PWA：vite-plugin-pwa（registerType autoUpdate + Workbox 预缓存全部静态产物，navigateFallback SPA）；manifest 名称 MindFlow + 192/512/maskable 图标（SVG 经 qlmanage 生成 PNG）；构建产物 manifest.webmanifest/sw.js/precache 10 entries 294KB 实测生成
 - **自查结论**：通过（七维自查；tsc -b 0 错误；build 输出实测 manifest+sw+图标齐全，manifest 生效证据待 preview 冒烟抓取）
+
+### CHG-014 ｜ 2026-11-18 20:44:01 ｜ 新增
+- **文件**：`.github/workflows/deploy.yml`、`vite.config.ts`
+- **需求关联**：REQ-010
+- **变更摘要**：GitHub Pages 部署：vite base=/mindflow-web/（实测资源/manifest/SW 注册路径全部带前缀、manifest scope 自动适配）；deploy.yml 用官方 upload-pages-artifact+deploy-pages 模式（pnpm 10 + Node 22 + frozen-lockfile + 最小权限 + 并发组）
+- **自查结论**：通过（七维自查；pnpm build 实测产物路径带 base；Actions 待 push 后远端运行验证）
 
 ## Bug 记录
 

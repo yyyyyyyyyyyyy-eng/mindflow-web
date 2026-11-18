@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // MindFlow Web 构建配置
-// 说明：base 将在「GitHub Pages 部署」需求中改为仓库名（/mindflow-web/）
 export default defineConfig({
+  // GitHub Pages 部署于仓库子路径（交付清单第 9 项）
+  base: '/mindflow-web/',
   plugins: [
     react(),
     // PWA：manifest + Workbox 离线缓存（交付清单第 8 项）
