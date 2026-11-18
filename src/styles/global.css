@@ -612,3 +612,8 @@ body {
 .insp-field input[type='color'] {
   padding: 2px;
 }
+
+/* ── 隐藏文件导入 input ── */
+.hidden-file-input {
+  display: none;
+}

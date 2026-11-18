@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { DocNode, DocumentService, MindDoc } from '../types'
 import { useDocument } from '../hooks/useDocument'
 import { findNode } from '../lib/treeUtils'
+import { saveMflowFile } from '../lib/mflowFile'
 import MindMapCanvasStub from './stubs/MindMapCanvasStub'
 import OutlineViewStub from './stubs/OutlineViewStub'
 import InspectorStub from './stubs/InspectorStub'
@@ -34,10 +35,10 @@ export default function ActiveDocPane({ service, onTitleSync }: ActiveDocPanePro
   const [selectedId] = useState<string>(() => service.getDoc().root.id)
   const [showPanel, setShowPanel] = useState(true)
 
-  // 标题镜像变化 → 上报标签栏
+  // 标题镜像变化 → 上报标签栏（root.text 即 title 的镜像源，契约 §2）
   useEffect(() => {
-    onTitleSync(doc.id, doc.title)
-  }, [doc.id, doc.title, onTitleSync])
+    onTitleSync(doc.id, doc.root.text)
+  }, [doc.id, doc.root.text, onTitleSync])
 
   // 撤销/重做快捷键（macOS：Cmd+Z / Cmd+Shift+Z；Windows/Linux：Ctrl 同理）
   useEffect(() => {
@@ -81,6 +82,16 @@ export default function ActiveDocPane({ service, onTitleSync }: ActiveDocPanePro
     [service],
   )
 
+  /** 导出 .mflow：优先 File System Access API，降级 Blob 下载；用户取消静默 */
+  const handleExport = useCallback(async (): Promise<void> => {
+    try {
+      await saveMflowFile(doc)
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      window.alert(`导出失败：${String(err)}`)
+    }
+  }, [doc])
+
   // 选中节点不存在时回退根节点（防御式）
   const selectedNode = findNode(doc.root, selectedId) ?? doc.root
 
@@ -122,6 +133,9 @@ export default function ActiveDocPane({ service, onTitleSync }: ActiveDocPanePro
           </button>
         </div>
         <span className="toolbar-spacer" />
+        <button type="button" className="btn" onClick={() => void handleExport()}>
+          导出 .mflow
+        </button>
         <button type="button" className="btn" onClick={() => setShowPanel((v) => !v)}>
           {showPanel ? '隐藏面板' : '样式面板'}
         </button>

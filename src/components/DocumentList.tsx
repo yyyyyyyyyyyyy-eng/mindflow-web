@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
-import type { DocMeta, StorageAdapter } from '../types'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { nanoid } from 'nanoid'
+import type { DocMeta, MindDoc, StorageAdapter } from '../types'
 import { createEmptyDoc } from '../lib/docFactory'
+import { readMflowFile, MflowParseError } from '../lib/mflowFile'
 
 /** 文档列表页 props：存储适配器 + 打开文档回调 */
 interface DocumentListProps {
@@ -81,12 +83,51 @@ export default function DocumentList({ adapter, onOpenDoc }: DocumentListProps) 
     if (e.key === 'Escape') setRenameId(null)
   }
 
+  /** 导入 .mflow：FileReader 读取 + 校验（formatVersion 必须 1）；id 冲突时生成新 id 副本导入 */
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // 允许连续导入同名文件
+    if (file === undefined) return
+    let doc: MindDoc
+    try {
+      doc = await readMflowFile(file)
+    } catch (err) {
+      window.alert(err instanceof MflowParseError ? err.message : `导入失败：${String(err)}`)
+      return
+    }
+    // 防覆盖：本地已存在同 id 文档时重新生成 id（以副本形式导入）
+    const existingIds = new Set((metas ?? []).map((m) => m.id))
+    const final: MindDoc = existingIds.has(doc.id)
+      ? { ...doc, id: nanoid(), updatedAt: new Date().toISOString() }
+      : { ...doc, updatedAt: new Date().toISOString() } // 导入视为一次变更
+    await adapter.save(final)
+    await refresh()
+    onOpenDoc(final.id)
+  }
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   return (
     <main className="doc-list-page">
       <header className="page-header">
         <h1 className="app-title">MindFlow</h1>
         <div className="header-actions">
-          {/* TODO(REQ-007)：导入 .mflow 按钮接入处 */}
+          {/* 隐藏 file input：accept 限定 .mflow */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".mflow,application/json"
+            className="hidden-file-input"
+            onChange={(e) => void handleImportFile(e)}
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+          <button
+            type="button"
+            className="btn"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            导入 .mflow
+          </button>
           <button type="button" className="btn btn-primary" onClick={() => void handleCreate()}>
             新建导图
           </button>

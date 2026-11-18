@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-18 20:26:47
-- **最新版本**：v0.8.0
+- **最近更新**：2026-11-18 20:28:07
+- **最新版本**：v0.9.0
 ---
 
 ## 需求跟踪
@@ -17,7 +17,7 @@
 | REQ-004 | DocumentService 临时实现（Immer undo 栈 + 2s 防抖 + subscribe + flushSave） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-005 | 文档列表页：新建/重命名/删除/DocMeta 展示 | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-006 | 编辑页：多文档标签栏 + 画布/大纲 stub 组件（§7 同签名真实改文档） | 2026-11-18 20:15:12 | 已完成 |  |
-| REQ-007 | .mflow 导入导出（JSON 校验 + Blob 下载 + FSAA 写回） | 2026-11-18 20:15:12 | 待实现 |  |
+| REQ-007 | .mflow 导入导出（JSON 校验 + Blob 下载 + FSAA 写回） | 2026-11-18 20:15:12 | 已完成 |  |
 | REQ-008 | 移动端 <768px 适配（大纲主入口/底部抽屉/44px 触控/pinch 手势/安全区） | 2026-11-18 20:15:12 | 待实现 |  |
 | REQ-009 | PWA：manifest + vite-plugin-pwa 离线缓存 | 2026-11-18 20:15:13 | 待实现 |  |
 | REQ-010 | GitHub Pages 部署工作流 + vite base | 2026-11-18 20:15:13 | 待实现 |  |
@@ -106,6 +106,12 @@
 - **需求关联**：REQ-006
 - **变更摘要**：编辑页：每文档一个 DocumentService 会话（undo 栈随标签保留）、切走/页面隐藏/卸载时 flushSave 落盘（visibilitychange+pagehide，摘要注明 beforeunload async 不可靠）、撤销重做快捷键 Cmd/Ctrl+Z、画布/大纲切换（小屏默认大纲）、检查器/主题库侧栏；App 接入列表↔编辑视图与标签页状态
 - **自查结论**：通过（七维自查；tsc -b 0 错误、vite build 通过；多标签与落盘行为待 dev 冒烟验证）
+
+### CHG-009 ｜ 2026-11-18 20:28:07 ｜ 新增
+- **文件**：`src/lib/mflowFile.ts`、`src/components/DocumentList.tsx`、`src/components/ActiveDocPane.tsx`、`src/styles/global.css`
+- **需求关联**：REQ-007
+- **变更摘要**：.mflow 导入导出：FileReader 读取 + 严格校验（formatVersion 必须为 1、结构白名单、递归形状校验）；导出优先 File System Access API 写回、降级 Blob 下载（文件名 MindFlow-标题.mflow，导出前同步 title 镜像）；导入 id 冲突生成新副本；顺带修复标签栏标题不同步 root.text 的隐患
+- **自查结论**：通过（七维自查；tsc -b 0 错误、vite build 通过；导入导出全链路待 dev 冒烟验证）
 
 ## Bug 记录
 
