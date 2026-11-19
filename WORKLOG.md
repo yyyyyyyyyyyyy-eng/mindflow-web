@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-19 10:43:04
-- **最新版本**：v0.14.4
+- **最近更新**：2026-11-19 11:32:13
+- **最新版本**：v0.15.0
 ---
 
 ## 需求跟踪
@@ -178,6 +178,12 @@
 - **需求关联**：REQ-004
 - **变更摘要**：澄清 BUG-005 复现记录：V3/V5「丢失」实为自动化测试用 input.blur() 对未聚焦元素是 no-op、onBlur 从未触发、编辑根本未入栈的测试假象；真实键盘链路（keydown Enter 提交→立即刷新）实测数据完整保留。恢复快照层保留为针对 pagehide async 写入不可靠的正当防御（Chrome 文档已记录该限制）
 - **自查结论**：通过（编辑→立即真实刷新→列表显示 V6+新时间戳，实测通过）
+
+### CHG-019 ｜ 2026-11-19 11:32:13 ｜ 新增
+- **文件**：`.github/workflows/deploy.yml`
+- **需求关联**：REQ-010
+- **变更摘要**：GitHub Pages 部署线上闭环验证：API 启用仓库 Pages（build_type=workflow）→ 重跑部署 run 全绿 → 线上实测 https://yyyyyyyyyyyyy-eng.github.io/mindflow-web/ 首页 200、manifest name=MindFlow 3 图标 scope=/mindflow-web/、sw.js 200；推送改走 SSH over 443（HTTPS 上传间歇阻断 + OAuth token 缺 workflow scope，SSH 一并绕开）
+- **自查结论**：通过（CI build job 全绿实测；线上 curl 三项 200 实测）
 
 ## Bug 记录
 
