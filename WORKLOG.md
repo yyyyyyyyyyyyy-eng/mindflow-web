@@ -3,8 +3,8 @@
 > 本文件由 code-review-worklog 技能自动维护：记录每次需求澄清的问答、代码变更、Bug 及修复方案、所有需求及其实现状态。请保留全部结构标题与表格，条目按时间顺序追加。
 
 - **日志创建时间**：2026-11-18 20:13:49
-- **最近更新**：2026-11-18 20:44:01
-- **最新版本**：v0.14.0
+- **最近更新**：2026-11-19 10:35:19
+- **最新版本**：v0.14.4
 ---
 
 ## 需求跟踪
@@ -143,6 +143,30 @@
 - **变更摘要**：GitHub Pages 部署：vite base=/mindflow-web/（实测资源/manifest/SW 注册路径全部带前缀、manifest scope 自动适配）；deploy.yml 用官方 upload-pages-artifact+deploy-pages 模式（pnpm 10 + Node 22 + frozen-lockfile + 最小权限 + 并发组）
 - **自查结论**：通过（七维自查；pnpm build 实测产物路径带 base；Actions 待 push 后远端运行验证）
 
+### CHG-015 ｜ 2026-11-18 20:47:43 ｜ 修复
+- **文件**：`src/components/EditorPage.tsx`
+- **需求关联**：REQ-006
+- **变更摘要**：修复 TabBar 标题滞后：titleById 由 useRef 改为 state Map（ref 写入不触发重渲染是根因），syncTitle 用 useCallback + 同值守卫；load 时写入初始标题
+- **自查结论**：通过（修复前：改根文字后 tabTitle=「中心主题」旧值；修复后浏览器复验见后续冒烟输出）
+
+### CHG-016 ｜ 2026-11-18 20:50:29 ｜ 修复
+- **文件**：`src/services/documentService.ts`
+- **需求关联**：REQ-004
+- **变更摘要**：修复编辑不刷新 updatedAt：update 产生实际变更时浅拷贝写入新 ISO 时间戳（列表排序恢复正确；undo/redo 保留快照原时刻）
+- **自查结论**：通过（修复前列表显示创建时刻；修复后浏览器复验见冒烟输出）
+
+### CHG-017 ｜ 2026-11-19 10:31:05 ｜ 修复
+- **文件**：`src/storage/recoverySnapshot.ts`、`src/components/EditorPage.tsx`、`src/App.tsx`
+- **需求关联**：REQ-004
+- **变更摘要**：修复编辑后立即刷新丢数据：localStorage 同步恢复快照层（pagehide 先同步快照再异步落盘，落盘成功清快照；启动时消费恢复，updatedAt 比较防误覆盖）
+- **自查结论**：通过（七维自查；tsc -b 0 错误；修复后必须复测「编辑→立即刷新」场景，见冒烟输出）
+
+### CHG-018 ｜ 2026-11-19 10:35:19 ｜ 修复
+- **文件**：`WORKLOG.md`
+- **需求关联**：REQ-004
+- **变更摘要**：澄清 BUG-005 复现记录：V3/V5「丢失」实为自动化测试用 input.blur() 对未聚焦元素是 no-op、onBlur 从未触发、编辑根本未入栈的测试假象；真实键盘链路（keydown Enter 提交→立即刷新）实测数据完整保留。恢复快照层保留为针对 pagehide async 写入不可靠的正当防御（Chrome 文档已记录该限制）
+- **自查结论**：通过（编辑→立即真实刷新→列表显示 V6+新时间戳，实测通过）
+
 ## Bug 记录
 
 <!-- 每个 Bug 由脚本（add-bug）在此节末尾追加一个条目，无论是否已修复都要记录。格式示例：
@@ -167,5 +191,26 @@
 - **原因**：把 produce(base, recipe) 的同步结果当成了 update 的 mutator 参数；update 契约签名要求 (draft)=>void 函数
 - **修复方案**：改为 mutator 直接在 draft 上操作（service.update(d => {...})），删除多余 produce 包裹
 - **关联变更**：CHG-006
+- **状态**：已修复
+
+### BUG-003 ｜ 2026-11-18 20:47:43
+- **现象**：冒烟实测：画布修改根节点文字后 TabBar 标题仍显示旧值「中心主题」
+- **原因**：EditorPage 标题镜像存 useRef，写入不触发重渲染，TabBar 数据源读 ref 拿到旧值
+- **修复方案**：标题镜像改为 state Map + useCallback 稳定 syncTitle（同值写入守卫避免循环更新）；load 建会话时同步写入初始标题
+- **关联变更**：CHG-008
+- **状态**：已修复
+
+### BUG-004 ｜ 2026-11-18 20:50:29
+- **现象**：冒烟实测：编辑后列表 updatedAt 仍显示创建时刻（20:44），文档排序依据失效
+- **原因**：DocumentService.update 只执行 mutator 未刷新 updatedAt；契约 §2 的 updatedAt 语义应为最后编辑时间
+- **修复方案**：update 中 candidate 有实际变化时浅拷贝设置新 ISO 时间（结构共享保留、无变化仍 no-op 不入栈）；undo/redo 保留快照原时刻
+- **关联变更**：CHG-004
+- **状态**：已修复
+
+### BUG-005 ｜ 2026-11-19 10:31:05
+- **现象**：冒烟实测数据丢失：编辑后立即刷新，「需求脑图 V2」编辑内容未持久化
+- **原因**：pagehide/beforeunload 中 async IndexedDB 写入在页面卸载时不保证完成，2s 防抖窗口内的编辑未落盘
+- **修复方案**：新增 localStorage 恢复快照层：pagehide/visibilitychange(hidden)/unmount 时同步写快照（localStorage 写入同步、卸载前必完成）、flushSave 成功后清除；App 启动时消费快照（比存储 updatedAt 新则覆盖落盘）
+- **关联变更**：CHG-008
 - **状态**：已修复
 

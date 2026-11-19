@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { StorageAdapter } from './types'
 import { createStorageAdapter, isMemoryFallback } from './storage/idbAdapter'
+import { consumeRecoverySnapshots } from './storage/recoverySnapshot'
 import DocumentList from './components/DocumentList'
 import EditorPage from './components/EditorPage'
 
@@ -17,9 +18,16 @@ export default function App() {
   const [openIds, setOpenIds] = useState<string[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
 
-  // 启动时创建存储适配器（IndexedDB，必要时降级内存）
+  // 启动时创建存储适配器（IndexedDB，必要时降级内存），并先消费页面卸载前
+  // 留下的恢复快照（BUG-005 场景：编辑后立即刷新，防抖窗口内编辑的兜底恢复）
   useEffect(() => {
-    void createStorageAdapter().then(setAdapter)
+    void createStorageAdapter().then(async (created) => {
+      const recovered = await consumeRecoverySnapshots(created)
+      if (recovered > 0) {
+        console.info(`[MindFlow] 已恢复 ${recovered} 个未落盘的编辑快照`)
+      }
+      setAdapter(created)
+    })
   }, [])
 
   /** 列表页：打开（或切换到）某文档的编辑标签 */

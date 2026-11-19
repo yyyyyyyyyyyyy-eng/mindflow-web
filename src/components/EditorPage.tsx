@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DocumentService, StorageAdapter } from '../types'
 import { createDocumentService } from '../services/documentService'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { writeRecoverySnapshot, clearRecoverySnapshot } from '../storage/recoverySnapshot'
 import TabBar, { type TabInfo } from './TabBar'
 import ActiveDocPane from './ActiveDocPane'
 import DocListSheet from './DocListSheet'
@@ -44,26 +45,44 @@ export default function EditorPage({
   onDocMissing,
   onOpenDoc,
 }: EditorPageProps) {
-  // 每个文档的编辑会话（service）与标题镜像
+  // 每个文档的编辑会话（service）；标题镜像存 state（ref 写入不会触发重渲染，
+  // 曾导致根节点改名后 TabBar 标题滞后——冒烟实测发现，BUG-003）
   const servicesRef = useRef(new Map<string, DocumentService>())
-  const titleByIdRef = useRef(new Map<string, string>())
+  const [titleById, setTitleById] = useState<Map<string, string>>(() => new Map())
   const [activeService, setActiveService] = useState<DocumentService | null>(null)
   // 契约 §7.1：小屏文档列表折叠为底部抽屉
   const isMobile = useIsMobile()
   const [docSheetOpen, setDocSheetOpen] = useState(false)
 
-  // 标题变化时同步到标签栏数据源（ActiveDocPane 上报）
-  const syncTitle = (docId: string, title: string): void => {
-    titleByIdRef.current.set(docId, title)
-  }
+  // 标题变化时同步到标签栏数据源（ActiveDocPane 上报；useCallback 稳定引用避免子级 effect 重跑）
+  const syncTitle = useCallback((docId: string, title: string): void => {
+    setTitleById((prev) => {
+      if (prev.get(docId) === title) return prev
+      const next = new Map(prev)
+      next.set(docId, title)
+      return next
+    })
+  }, [])
 
   // 落盘监听：页面隐藏/卸载时 flush 所有活跃会话。
-  // 说明：beforeunload 中 async IndexedDB 写入不可靠，故同时挂
-  // visibilitychange(hidden) 与 pagehide（后者在 bfcache 场景更可靠）；
-  // 常规路径有 2s 防抖自动保存兜底。
+  // 说明：beforeunload/pagehide 中 async IndexedDB 写入在卸载时不可靠（BUG-005
+  // 实测会丢防抖窗口内的编辑），故先**同步**写 localStorage 恢复快照再异步落盘，
+  // 启动时由 consumeRecoverySnapshots 消费恢复；常规路径有 2s 防抖保存。
   useEffect(() => {
     const flushAll = (): void => {
-      for (const svc of servicesRef.current.values()) void svc.flushSave()
+      for (const svc of servicesRef.current.values()) {
+        const docId = svc.getDoc().id
+        // 同步快照兜底（必须先于异步落盘完成）
+        writeRecoverySnapshot(svc.getDoc())
+        void svc
+          .flushSave()
+          .then(() => {
+            clearRecoverySnapshot(docId)
+          })
+          .catch(() => {
+            // 落盘失败：快照保留，下次启动由恢复层兜底
+          })
+      }
     }
     const onVisibility = (): void => {
       if (document.visibilityState === 'hidden') flushAll()
@@ -95,7 +114,11 @@ export default function EditorPage({
       }
       const svc = createDocumentService(adapter, doc)
       servicesRef.current.set(activeId, svc)
-      titleByIdRef.current.set(activeId, doc.title)
+      setTitleById((prev) => {
+        const next = new Map(prev)
+        next.set(activeId, doc.title)
+        return next
+      })
       setActiveService(svc)
     }
     void ensure()
@@ -124,7 +147,7 @@ export default function EditorPage({
 
   const tabs: TabInfo[] = openIds.map((id) => ({
     id,
-    title: titleByIdRef.current.get(id) ?? '…',
+    title: titleById.get(id) ?? '…',
   }))
 
   return (
