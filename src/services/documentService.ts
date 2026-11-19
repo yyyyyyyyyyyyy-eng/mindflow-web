@@ -67,8 +67,11 @@ export function createDocumentService(
     update(mutator: (draft: MindDoc) => void): void {
       // Immer：有实际修改时返回新引用；mutator 直接返回替换值（编辑页 onDocChange
       // 路径）同样得到新文档。无变化时返回原引用，跳过入栈与保存。
-      const next = produce(current, mutator)
-      if (next === current) return
+      const candidate = produce(current, mutator)
+      if (candidate === current) return
+      // 内容实际变化 → 刷新 updatedAt（浅拷贝保留结构共享；undo/redo 不刷新，
+      // 保留快照原时刻，见 BUG-004 修复说明）
+      const next: MindDoc = { ...candidate, updatedAt: new Date().toISOString() }
       past.push(current)
       future.length = 0 // 新编辑使 redo 分支失效（标准 undo 语义）
       current = next
